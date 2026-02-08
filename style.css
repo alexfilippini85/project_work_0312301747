@@ -89,6 +89,18 @@ table th {
     background: #eee;
 }
 
+.row_ok {
+	background-color: white;
+}
+
+.row_warning {
+	background-color: #ffa50033;
+}
+
+.row_ko {
+	background-color: #ff000024;
+}
+
 .chartContainer {
     margin-top: 30px;
     background: #fff;
