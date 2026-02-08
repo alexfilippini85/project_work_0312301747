@@ -43,7 +43,7 @@ class Demand {
             const noise = randStdNorm * noiseStd;
 
             const monthDemand = Math.max(0, Math.round((baseLevel + trend) * peakMult + noise));
-            const domandaGiornaliera = this.#generaDomandaGiornaliera(monthDemand, 30);
+            const domandaGiornaliera = this.#generateDailyDemand(monthDemand, 30);
             demand.push({
                 tot: monthDemand,
                 daily: domandaGiornaliera
@@ -57,7 +57,7 @@ class Demand {
      * Genera domanda giornaliera mensile con distribuzione esponenziale usando seeded random.
      * Simula vendite realistiche: molti giorni bassi, pochi picchi alti, somma ESATTA=totalMensile.
      */
-    #generaDomandaGiornaliera(totalMensile, giorniMese) {
+    #generateDailyDemand(totalMensile, giorniMese) {
 
         /**
          * Tasso esponenziale adattivo: λ = giorni/total

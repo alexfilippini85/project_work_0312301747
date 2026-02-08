@@ -61,7 +61,9 @@ class SimulationEngine {
         // Valore stock iniziale: ROP + EOQ/2 --> Inventario medio iniziale, riduce immobilizzo capitale.
         let stock = reorderPoint + EOQ / 2;
 
-		// oggetto (mappa) dove la chiave indica la data di arrivo. Il formato della chiave è il progressivo mese + il progressivo giorno (es: 5_23 significa mese 5, giorno 23)
+		// oggetto (mappa) dove la chiave indica la data di arrivo. 
+		// Il formato della chiave è il progressivo mese + il progressivo giorno 
+		// (es: 5_23 significa mese 5, giorno 23)
         let onOrder = {}; 
 
 		// array contenente i risultati della simulazione. Ogni occorrenza rappresenta un mese
