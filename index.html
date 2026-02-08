@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="it">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Simulatore EOQ & Stock</title>
+        <script src="chart.umd.min.js"></script>
+        <script src="random.js"></script>
+        <script src="demand_generator.js"></script>
+        <script src="simulation_table.js"></script>
+        <script src="simulation_chart.js"></script>
+        <script src="simulation_engine.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="style.css" />
+    </head>
+    <body>
+        <h1>Simulatore EOQ, Safety Stock e Livello di Servizio</h1>
+
+        <div class="container">
+            <!-- Sezione 1: generazione serie demanda -->
+            <fieldset>
+                <legend>Parametri generazione domanda mensile</legend>
+
+                <label for="seed">Seed (per ripetibilità simulazione)</label>
+                <input type="number" id="seed" value="50" min="0" step="1" />
+
+                <label for="baseLevel">baseLevel (domanda media mensile di base)</label>
+                <input type="number" id="baseLevel" value="5200" min="0" step="1" />
+
+                <label for="trendPerPeriod">trendPerPeriod (variazione per mese)</label>
+                <input type="number" id="trendPerPeriod" value="20" step="1" />
+
+                <label for="noiseStd">noiseStd (rumore casuale)</label>
+                <input type="number" id="noiseStd" value="3000" step="1" />
+
+                <label for="peakMonth">peakMonth (1-12)</label>
+                <input type="number" id="peakMonth" value="12" min="1" max="12" step="1" />
+
+                <label for="peakFactor">peakFactor (moltiplicatore per mese di picco)</label>
+                <input type="number" id="peakFactor" value="1.28" step="0.1" />
+
+                <label for="months">Numero mesi di simulazione</label>
+                <input type="number" id="months" value="36" min="1" max="60" step="1" />
+            </fieldset>
+
+            <!-- Sezione 2: parametri inventario -->
+            <fieldset>
+                <legend>Parametri EOQ / Inventario</legend>
+
+                <label for="applySafetyStock">Safety Stock</label>
+                <input type="checkbox" id="applySafetyStock" value="1" checked />
+
+                <label for="setupCost">Costo di setup / ordine (S)</label>
+                <input type="number" id="setupCost" value="500" min="0" step="0.01" />
+
+                <label for="holdingCost">Costo di mantenimento per unità/anno (H)</label>
+                <input type="number" id="holdingCost" value="5" min="0" step="0.01" />
+
+                <label for="leadTime">Lead time (giorni)</label>
+                <input type="number" id="leadTime" value="15" min="0" step="1" />
+
+                <label for="serviceZ">Z per livello di servizio (es. 1.65 ≈ 95%)</label>
+                <select id="serviceZ" required>
+                    <option value="1.2815517783164978">90%</option>
+                    <option value="1.64485365152359" selected>95%</option>
+                    <option value="2.326347053050995">99%</option>
+                </select>
+            </fieldset>
+        </div>
+
+		<!-- Sezione 3: pulsante per avviare simulazione -->
+        <button id="runBtn" onclick="startSimulation()">Esegui simulazione</button>
+
+        <div id="results">
+        
+        	<!-- Sezione 4: Risultati sintetici -->
+            <h2>Risultati sintetici</h2>
+            <p id="summary"></p>
+
+			<!-- Sezione 5: Tabella con dettaglio mese per mese esito simulazione -->
+            <h2>Dettaglio mese per mese</h2>
+            <div style="overflow-x: auto">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Mese</th>
+                            <th>Stock iniziale</th>
+                            <th>Domanda</th>
+                            <th>Incoming</th>
+                            <th>Ordine (se lanciato)</th>
+                            <th>Domanda soddisfatta</th>
+                            <th>Giorni stockout</th>
+                            <th>Backorder</th>
+                            <th>Stock finale</th>
+                            <th>Liv. servizio</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="chartContainer">
+            <h2>Andamento mensile</h2>
+            <canvas id="simulationChart" height="120"></canvas>
+        </div>
+
+        <div class="chartContainer">
+            <h2>Livello di servizio</h2>
+            <canvas id="serviceLevelChart" height="80"></canvas>
+        </div>
+
+        <div class="chartContainer">
+            <h2>Andamento stock e ordini</h2>
+            <canvas id="reorderChart" height="80"></canvas>
+        </div>
+
+        <script>
+        
+            const simulationEngine = new SimulationEngine();
+            const simulationTable = new SimulationTable();
+            const simulationChart = new SimulationChart();
+
+			function startSimulation() {
+			
+                // Lettura parametri serie domanda
+                const seed = parseFloat(document.getElementById("seed").value) || 0;
+                const baseLevel = parseFloat(document.getElementById("baseLevel").value) || 0;
+                const trendPerPeriod = parseFloat(document.getElementById("trendPerPeriod").value) || 0;
+                const noiseStd = parseFloat(document.getElementById("noiseStd").value) || 0;
+                const peakMonth = parseInt(document.getElementById("peakMonth").value) || 1;
+                const peakFactor = parseFloat(document.getElementById("peakFactor").value) || 1;
+                const months = parseInt(document.getElementById("months").value) || 12;
+
+
+				// Generazione dati sintetici domanda
+                const syntheticDemand = new Demand(
+                    seed,
+                    months,
+                    baseLevel,
+                    trendPerPeriod,
+                    noiseStd,
+                    peakMonth,
+                    peakFactor
+                );
+
+
+                // Lettura parametri servizio
+                const applySafetyStock = document.getElementById("applySafetyStock").checked;
+                const setupCost = parseFloat(document.getElementById("setupCost").value) || 0;
+                const holdingCost = parseFloat(document.getElementById("holdingCost").value) || 0;
+                const leadTime = parseFloat(document.getElementById("leadTime").value) || 0;
+                const serviceZ = parseFloat(document.getElementById("serviceZ").value) || 0;
+
+
+                // Calcolo EOQ, SS, ROP 
+                const EOQ = simulationEngine.computeEOQ(syntheticDemand.annualDemand, setupCost, holdingCost);
+                const safetyStock = applySafetyStock
+                    ? simulationEngine.computeSafetyStock(syntheticDemand.dailyStdDeviation, leadTime, serviceZ)
+                    : 0;
+                const reorderPoint = simulationEngine.computeReorderPoint(
+                    syntheticDemand.dailyAvgDemand,
+                    leadTime,
+                    safetyStock
+                );
+
+
+				// Avvio simulazione
+                const { simulationMonths, overallServiceLevel } = simulationEngine.simulateInventory(
+                    syntheticDemand,
+                    EOQ,
+                    reorderPoint,
+                    safetyStock,
+                    leadTime
+                );
+                
+
+
+				// Render risultati sintetici
+                const summary = document.getElementById("summary");
+                summary.innerHTML = `
+					Domanda annua (D, unità/anno): <strong>${syntheticDemand.annualDemand.toFixed(0)}</strong>,<br>
+					Domanda media giornaliera: <strong>${syntheticDemand.dailyAvgDemand.toFixed(2)}</strong>,<br>
+					Variabilità domanda giornaliera (std. deviation): <strong>${syntheticDemand.dailyStdDeviation.toFixed(2)}</strong>,<br>
+					EOQ: <strong>${EOQ}</strong> unità,<br>
+					Safety stock: <strong>${safetyStock}</strong> unità,<br>
+					Reorder point: <strong>${reorderPoint}</strong> unità.<br>
+					Livello di servizio complessivo: <strong>${(overallServiceLevel * 100).toFixed(2)}%</strong>.`;
+
+
+                // Render tabella simulazione con dati mese per mese
+                simulationTable.render(document.querySelector("#resultsTable tbody"), simulationMonths);
+
+
+                // Render grafico simulazione con dati mese per mese
+                simulationChart.updateSimulation(
+                    "simulationChart",
+                    syntheticDemand,
+                    simulationMonths
+                );
+                
+
+                // Render grafico service level con dati mese per mese
+                simulationChart.updateServiceLevel(
+                    "serviceLevelChart",
+                    simulationMonths
+                );
+                
+
+                // Render grafico ordini con dati mese per mese
+                simulationChart.updateReorder(
+                	"reorderChart", 
+                	simulationMonths, 
+                	reorderPoint
+                );
+                
+            }
+            
+            
+        </script>
+    </body>
+</html>
