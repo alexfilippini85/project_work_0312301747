@@ -12,6 +12,14 @@ class SimulationTable {
         tbody.innerHTML = '';
         simulationMonths.forEach(r => {
             const tr = document.createElement('tr');
+            
+            if (r.backorder > 0)
+            	tr.className = "row_ko";
+            else if (r.stockoutDays > 0)
+            	tr.className = "row_warning";
+            else
+            	tr.className = "row_ok";	
+            
             tr.innerHTML = `
           <td style="text-align:center;">${r.month}</td>
           <td>${r.stockStart}</td>
