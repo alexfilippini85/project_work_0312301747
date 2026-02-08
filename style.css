@@ -1,0 +1,98 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f5f5f5;
+}
+
+h1 {
+    text-align: center;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+fieldset {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px 15px;
+    background: #fff;
+    flex: 1 1 320px;
+}
+
+legend {
+    font-weight: bold;
+}
+
+label {
+    display: block;
+    margin-top: 8px;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+    margin-top: 3px;
+}
+
+select {
+    width: 100%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+    margin-top: 3px;
+}
+
+button {
+    margin-top: 15px;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+#runBtn {
+    width: 100%;
+    background-color: #1c4d71;
+    border: solid 2px #4d718d;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#runBtn:hover {
+    border: solid 2px #9bceff;
+    background-color: #1c4d71;
+}
+
+#results {
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    background: #fff;
+}
+
+table th,
+table td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: right;
+}
+
+table th {
+    background: #eee;
+}
+
+.chartContainer {
+    margin-top: 30px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
