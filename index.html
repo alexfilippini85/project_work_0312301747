@@ -109,11 +109,6 @@
             <canvas id="serviceLevelChart" height="80"></canvas>
         </div>
 
-        <div class="chartContainer">
-            <h2>Andamento stock e ordini</h2>
-            <canvas id="reorderChart" height="80"></canvas>
-        </div>
-
         <script>
         
             const simulationEngine = new SimulationEngine();
@@ -203,14 +198,6 @@
                 simulationChart.updateServiceLevel(
                     "serviceLevelChart",
                     simulationMonths
-                );
-                
-
-                // Render grafico ordini con dati mese per mese
-                simulationChart.updateReorder(
-                	"reorderChart", 
-                	simulationMonths, 
-                	reorderPoint
                 );
                 
             }
